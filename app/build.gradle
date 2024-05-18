@@ -1,0 +1,57 @@
+
+plugins {
+    alias(libs.plugins.androidApplication)
+    id 'com.google.gms.google-services'
+}
+
+android {
+    namespace 'com.android.bingmaps'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.android.bingmaps"
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    viewBinding{
+        enabled true
+    }
+    buildTypes {
+
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            buildConfigField "String", "CREDENTIALS_KEY", "AhsOaBxGfhDChKCkYpOqd1jP75CBcMhKBzD99riuj07p79vdyFMtBsSAHuPMF2M8"
+        }
+
+        debug {
+            android.buildFeatures.buildConfig true
+            buildConfigField "String", "CREDENTIALS_KEY",
+                    "\"AhsOaBxGfhDChKCkYpOqd1jP75CBcMhKBzD99riuj07p79vdyFMtBsSAHuPMF2M8\""
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+}
+
+dependencies {
+
+    implementation libs.appcompat
+    implementation libs.material
+    implementation libs.activity
+    implementation libs.constraintlayout
+    testImplementation libs.junit
+    androidTestImplementation libs.ext.junit
+    androidTestImplementation libs.espresso.core
+    implementation files('../app/libs/bingsdk.aar')
+
+}
+apply from: 'secrets.gradle'
