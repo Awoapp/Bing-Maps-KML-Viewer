@@ -25,7 +25,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            buildConfigField "String", "CREDENTIALS_KEY", "AhsOaBxGfhDChKCkYpOqd1jP75CBcMhKBzD99riuj07p79vdyFMtBsSAHuPMF2M8"
+            buildConfigField "String", "CREDENTIALS_KEY", "YOUR_CREDENTIALS_KEY"
         }
 
         debug {
