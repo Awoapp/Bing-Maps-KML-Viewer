@@ -7,10 +7,12 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -20,7 +22,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
  */
 public class KMLReader {
     private Context context;
-    private List<String> colorLists;
+    private Map<String, String> styleMap;
 
     /**
      * Constructor for KMLReader.
@@ -29,6 +31,7 @@ public class KMLReader {
      */
     public KMLReader(Context context) {
         this.context = context;
+        this.styleMap = new HashMap<>();
     }
 
     /**
@@ -40,7 +43,7 @@ public class KMLReader {
      */
     public ArrayList<Placemark> readKMLFile(InputStream inputStream) {
         ArrayList<Placemark> result = new ArrayList<>();
-        colorLists= new ArrayList<>();
+
         try {
             // Create a new DocumentBuilderFactory
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -54,12 +57,13 @@ public class KMLReader {
             // Normalize the XML Structure
             document.getDocumentElement().normalize();
 
-            // Get all Style elements
+            // First pass: Collect styles
             NodeList styleList = document.getElementsByTagName("Style");
             for (int i = 0; i < styleList.getLength(); i++) {
                 Node styleNode = styleList.item(i);
                 if (styleNode.getNodeType() == Node.ELEMENT_NODE) {
                     Element styleElement = (Element) styleNode;
+                    String styleId = styleElement.getAttribute("id");
                     String color = "";
                     NodeList colorList = styleElement.getElementsByTagName("color");
                     if (colorList != null && colorList.getLength() > 0) {
@@ -68,18 +72,36 @@ public class KMLReader {
                             color = colorNode.getTextContent();
                         }
                     }
-                    colorLists.add("#"+color);
-
+                    styleMap.put("#" + styleId, "#" + color);
                 }
             }
 
+            // Collect style maps
+            NodeList styleMapList = document.getElementsByTagName("StyleMap");
+            for (int i = 0; i < styleMapList.getLength(); i++) {
+                Node styleMapNode = styleMapList.item(i);
+                if (styleMapNode.getNodeType() == Node.ELEMENT_NODE) {
+                    Element styleMapElement = (Element) styleMapNode;
+                    String styleMapId = styleMapElement.getAttribute("id");
+                    NodeList pairList = styleMapElement.getElementsByTagName("Pair");
+                    for (int j = 0; j < pairList.getLength(); j++) {
+                        Node pairNode = pairList.item(j);
+                        if (pairNode.getNodeType() == Node.ELEMENT_NODE) {
+                            Element pairElement = (Element) pairNode;
+                            String key = pairElement.getElementsByTagName("key").item(0).getTextContent();
+                            String styleUrl = pairElement.getElementsByTagName("styleUrl").item(0).getTextContent();
+                            if ("normal".equals(key)) {
+                                styleMap.put("#" + styleMapId, styleUrl);
+                            }
+                        }
+                    }
+                }
+            }
 
-            // Get all Folder elements
+            // Second pass: Collect placemarks
             NodeList folderList = document.getElementsByTagName("Folder");
-            int orderColor=0;
             // Iterate through the folders
             for (int i = 0; i < folderList.getLength(); i++) {
-
                 Node folderNode = folderList.item(i);
                 if (folderNode.getNodeType() == Node.ELEMENT_NODE) {
                     Element folderElement = (Element) folderNode;
@@ -103,12 +125,18 @@ public class KMLReader {
                             String coordinates = (placemarkElement.getElementsByTagName("coordinates").item(0) != null)
                                     ? placemarkElement.getElementsByTagName("coordinates").item(0).getTextContent()
                                     : "";
+                            String styleUrl = (placemarkElement.getElementsByTagName("styleUrl").item(0) != null)
+                                    ? placemarkElement.getElementsByTagName("styleUrl").item(0).getTextContent()
+                                    : "";
 
+                            // Resolve the styleUrl to an actual color
+                            String resolvedColor = styleMap.get(styleUrl);
+                            if (resolvedColor != null && resolvedColor.startsWith("#")) {
+                                resolvedColor = styleMap.get(resolvedColor);
+                            }
 
-
-                            Placemark placemark = new Placemark(name, description, coordinates,
-                                    colorLists.get(orderColor));
-                            orderColor++;
+                            Placemark placemark = new Placemark(name, description, coordinates, resolvedColor);
+                            Log.i("KML_LOG", "KML: " + placemark.getName() + "   **   " + placemark.getColor());
                             // Add placemark to the result list
                             result.add(placemark);
                         }
@@ -120,7 +148,7 @@ public class KMLReader {
             inputStream.close();
         } catch (Exception e) {
             e.printStackTrace();
-            Log.i("AMCIKMAKARNASI", "KML. " + e.getMessage());
+            Log.i("KML_LOG", "KML Error: " + e.getMessage());
         }
         return result;
     }

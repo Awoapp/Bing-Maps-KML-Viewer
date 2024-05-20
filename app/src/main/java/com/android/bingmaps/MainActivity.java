@@ -20,6 +20,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,6 +32,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.drawable.DrawableCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.bingmaps.databinding.ActivityMainBinding;
 import com.google.android.material.snackbar.Snackbar;
@@ -49,7 +53,7 @@ import com.microsoft.maps.MapView;
 import java.io.InputStream;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements GoToLocation {
     private static final int REQUEST_CODE_READ_EXTERNAL_STORAGE = 100;
     private static final int REQUEST_CODE_PICK_FILE = 101;
     private PreferencesHelper preferencesHelper;
@@ -62,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Placemark> geoModelArrayList;
     private MapIcon locationPin;
     public MapElementLayer userLocationLayer;
-
+   private Dialog placemarkDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,6 +108,9 @@ public class MainActivity extends AppCompatActivity {
             MapElement mapElement = mapElementTappedEventArgs.mapElements.get(0);
             if (mapElement instanceof MapIcon) {
                 MapIcon mapIcon = (MapIcon) mapElement;
+                if (((MapIcon) mapElement).getTitle().equals("Your Location")) {
+                    return false;
+                }
                 mapIcon.getFlyout().hide();
                 //show info dialog
                 showFlayoutInfoDialog(utilities.findGeoModelIndexByLocation(mapIcon.getContentDescription().toString(),geoModelArrayList));
@@ -136,7 +143,8 @@ public class MainActivity extends AppCompatActivity {
         }
         // Check if the KML file path is saved in SharedPreferences
         checkReadPermissionAndLoadKmlFile();
-
+        //show all placemarks
+        binding.fabList.setOnClickListener(v -> showPlacemarkListDialog());
 
     }
 
@@ -192,17 +200,18 @@ public class MainActivity extends AppCompatActivity {
         etTitle.setText(placemark.getName());
         etDescription.setText(placemark.getDescription());
         String[] parts = placemark.getCoordinates().split(",");
-        etLocation.setText(parts[0].trim() + "," + parts[1].trim());
+        String cordinates=parts[1].trim() + "," + parts[0].trim();
+        etLocation.setText(cordinates);
         etCategory.setText(utilities.findFirstEmptyLocationBefore(placemark.getName(),geoModelArrayList));
         //open location with google map
         view.findViewById(R.id.btnOpenWithGoogleMap).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String location = placemark.getCoordinates();
-                String[] parts = location.split(", ");
-                double latitude = Double.parseDouble(parts[0]);
-                double longitude = Double.parseDouble(parts[1]);
-                String uri = "http://maps.google.com/maps?q=loc:" + latitude + "," + longitude;
+                String[] parts = location.split(",");
+                double latitude = Double.parseDouble(parts[1]);
+                double longitude = Double.parseDouble(parts[0]);
+                String uri = "http://maps.google.com/maps?q=loc:" +cordinates;
                 startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(uri)));
             }
         });
@@ -220,6 +229,53 @@ public class MainActivity extends AppCompatActivity {
         if (infoDialog.getWindow() != null) {
             infoDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
+    }
+
+    private void showPlacemarkListDialog() {
+        // Create a dialog builder
+        androidx.appcompat.app.AlertDialog.Builder builder =
+                new androidx.appcompat.app.AlertDialog.Builder(this, R.style.CustomAlertDialog);
+
+        // Inflate the dialog layout
+        View view = getLayoutInflater().inflate(R.layout.dialog_list, null);
+        builder.setView(view);
+         placemarkDialog = builder.create();
+        placemarkDialog.setCancelable(false);
+
+        // Find the RecyclerView in the dialog layout
+        RecyclerView recyclerView = view.findViewById(R.id.dialogRecyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        if (geoModelArrayList == null) {
+            return;
+        }
+        ArrayList<Placemark> placemarkArrayList= new ArrayList<>();
+        for (Placemark placemark : geoModelArrayList) {
+            if (!placemark.getCoordinates().isEmpty()) {
+                placemarkArrayList.add(placemark);
+            }
+        }
+        // Set the adapter for the RecyclerView
+        PlacemarkAdapter adapter = new PlacemarkAdapter(this, placemarkArrayList,this::goToLocation);
+        recyclerView.setAdapter(adapter);
+
+        // Close dialog button
+        view.findViewById(R.id.dialogTitle).setOnClickListener(v -> placemarkDialog.dismiss());
+
+        // Show the dialog
+        placemarkDialog.show();
+// Set the dialog background to transparent
+        if (placemarkDialog.getWindow() != null) {
+            placemarkDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+            // Set the dialog size
+            WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams();
+            layoutParams.copyFrom(placemarkDialog.getWindow().getAttributes());
+            layoutParams.width = WindowManager.LayoutParams.MATCH_PARENT;
+            layoutParams.height = (int) (getResources().getDisplayMetrics().heightPixels * 0.75);
+            placemarkDialog.getWindow().setAttributes(layoutParams);
+        }
+
     }
 
 
@@ -424,4 +480,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    public void goToLocation(String coordinates) {
+        String[] parts = coordinates.split(",");
+        double latitude = Double.parseDouble(parts[1]);
+        double longitude = Double.parseDouble(parts[0]);
+        MapScene mapScene = MapScene.createFromLocationAndZoomLevel(new Geopoint(latitude, longitude), 15.0);
+        mMapView.setScene(mapScene, MapAnimationKind.LINEAR);
+        if (placemarkDialog != null) {
+            placemarkDialog.dismiss();
+        }
+    }
 }

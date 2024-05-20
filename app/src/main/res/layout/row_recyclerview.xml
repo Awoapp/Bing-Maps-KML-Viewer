@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cardView"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="10dp"
+    app:cardCornerRadius="10dp">
+
+    <TextView
+        android:id="@+id/tvCategoryTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:drawableLeft="@drawable/baseline_subdirectory_arrow_right_24"
+        android:drawablePadding="5dp"
+        android:padding="10dp"
+        android:textSize="24sp"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/llayoutMain"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:visibility="visible">
+
+        <TextView
+            android:id="@+id/tvCategory"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="10dp"
+            android:paddingTop="10dp"
+            android:paddingRight="10dp"
+            android:text="Category: Mounts"
+            android:textSize="20sp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:text="Location: Ağrı Mount"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/tvDescriptions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:text="Description: lore lore lore lore lore lore lore lore lore lore "
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/tvGeoPoint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawablePadding="5dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:text="Coordinates: 36.56,34.65"
+            android:textSize="20sp" />
+
+        <LinearLayout
+            android:id="@+id/llayoutBottom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0"
+            android:orientation="horizontal"
+            android:paddingTop="10dp">
+
+            <ImageView
+                android:id="@+id/imgCopy"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_margin="5dp"
+                android:layout_weight="1"
+                android:tint="#E7E7E7"
+                app:srcCompat="@drawable/baseline_content_copy_24" />
+
+            <ImageView
+                android:id="@+id/imgOpenWithGoogleMaps"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_margin="5dp"
+                android:layout_weight="1"
+                android:tint="#E7E7E7"
+                app:srcCompat="@drawable/baseline_map_24" />
+        </LinearLayout>
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>
