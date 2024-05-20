@@ -3,7 +3,7 @@
 Bing Maps KML Viewer is an Android application designed to visualize Google Maps KML files on Bing Maps. The primary purpose of this project is to allow nature lovers like myself to see Google Maps data with the often superior image quality provided by Bing Maps. As someone who loves nature, I wanted a way to view the maps I created on Google Maps with the better visual clarity of Bing Maps.
 [Download Demo APK](https://drive.google.com/file/d/1F8SrSraxl4o1DYTAz2zeTIXAU48G3cFD/view?usp=sharing)
 
-<img src="Screenshot_20240202_232625.png" width="400">
+<img src="fireworks.fw.png" width="400">
 
 ## Purpose
 
